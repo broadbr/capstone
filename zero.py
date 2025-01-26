@@ -15,18 +15,14 @@ import pandas
 import sklearn
 import pyvirtualcam
 from pynput import keyboard
-
-import cv2
-
-import cv2
-import numpy as np
+import pygetwindow as gw
 from PIL import ImageGrab
 
 #captures a window
 def capture_window(window_title=None):
     if window_title:
         try:
-            import pygetwindow as gw
+            
             window = gw.getWindowsWithTitle(window_title)[0]
             
             #Deafault size of the window
@@ -45,12 +41,12 @@ def capture_window(window_title=None):
 
 
 #while recording
-def start_recording():
+def start_recording(window_title):
     
     while True:
         #calls capture_window
         try:
-            frame = capture_window(window_title=window_title)
+            frame = capture_window(window_title)
 
             if frame is None:
                 break
@@ -86,13 +82,20 @@ def adjust_source():
      #   pass 
 
 #default window title    
-widnow_title = "File Explorer"
+window_title = "File Explorer"
 
 
 
 if __name__ == "__main__":
+
     window_title = input("Enter the source window: ")
-    start_recording()
+
+    if window_title:
+        start_recording(window_title)
+    else:
+        print("Window not found.")
+
+    
 
             
 #listener = keyboard.Listener(on_press=on_press)
