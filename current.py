@@ -1,7 +1,7 @@
 ##Deliverable 1: Employing openCV
 
 # Create a virtual camera that is locked to one screen.(COMPLETE) 
-# Create functions to adjust its bounds, position, and source screen.
+# Create functions to adjust its bounds, position, and source screen.(NEEDS MIN/MAX BOUNDS)
 # Make a function to start and stop the recording.(COMPLETE)
 # Extract each individual frame from the video and calculate if they have changed. 
 # If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.
@@ -44,13 +44,25 @@ def capture_window(window_title,adjustments):
             #deafault size of the window
             #x1, y1, x2, y2 = window.left, window.top, window.left + window.width, window.top + window.height
             #desired size of the window
-            x1, y1, x2, y2 = window.left + h_change, window.top + v_change, window.left + window.width + h_change,\
-                                                                            window.top + window.height + v_change
+            width = window.width
+            height = window.height
+
+            # Apply zoom
+            zoom_factor = 1 + z_change / 1000.0
+            new_width = int(width * zoom_factor)
+            new_height = int(height * zoom_factor)
+
+            # Calculate new coordinates with zoom and position adjustments
+            x1 = window.left + h_change - (new_width - width) // 2
+            y1 = window.top + v_change - (new_height - height) // 2
+            x2 = x1 + new_width
+            y2 = y1 + new_height
+
             img = ImageGrab.grab(bbox=(x1, y1, x2, y2))
 
-                #convert PIL Image to OpenCV
+            # Convert PIL Image to OpenCV
             frame = np.array(img)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) 
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             return frame
         
         else:
@@ -100,13 +112,13 @@ def on_press(key):
     elif key.char == 'd':
         adjustments["horizontal"] += 100
     elif key.char =='w':
-        adjustments["vertical"] += 100
-    elif key.char == 's':
         adjustments["vertical"] -= 100
+    elif key.char == 's':
+        adjustments["vertical"] += 100
     elif key.char == 'x':
-        adjustments["zoom"] -= 100
-    elif key.char == 'z':
         adjustments["zoom"] += 100
+    elif key.char == 'z':
+        adjustments["zoom"] -= 100
     #print(f"Adjustments updated: {adjustments}")
     
 
@@ -143,3 +155,5 @@ if __name__ == "__main__":
             print("Please type 'r', 's', or 'e'.")
 
             
+
+
