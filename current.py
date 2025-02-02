@@ -3,18 +3,19 @@
 # Create a virtual camera that is locked to one screen.(COMPLETE) 
 # Create functions to adjust its bounds, position, and source screen.(NEEDS MIN/MAX BOUNDS)
 # Make a function to start and stop the recording.(COMPLETE)
-# Extract each individual frame from the video and calculate if they have changed. 
+# Extract each individual frame from the video and calculate if they have changed.(COMPLETE)
 # If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.
 # Remove noise from the frames.
 
 
+
+#import torch
+#import pandas
+#import sklearn
+#import pyvirtualcam
 import sys
 import numpy as np
-import torch
 import cv2
-import pandas
-import sklearn
-import pyvirtualcam
 import pynput
 import pygetwindow as gw
 from PIL import ImageGrab
@@ -43,6 +44,7 @@ def capture_window(window_title,adjustments):
             
             #deafault size of the window
             #x1, y1, x2, y2 = window.left, window.top, window.left + window.width, window.top + window.height
+
             #desired size of the window
             width = window.width
             height = window.height
@@ -81,6 +83,11 @@ def start_recording(window_title):
     global adjustments
     listener = pynput.keyboard.Listener(on_press=on_press)
     listener.start()
+
+    previous_frame = None
+    unique_frames = 0
+    count = 0
+
     while True:
         #calls capture_window
         try:
@@ -88,10 +95,40 @@ def start_recording(window_title):
             if frame is None:
                 break
 
+            #check if the frame is valid size
+            if previous_frame is not None and frame.shape != previous_frame.shape:
+                previous_frame = None
+                count = 0
+                cv2.imshow('Screen Capture', frame)
+                previous_frame = frame.copy()
+                continue
+
+            if previous_frame is not None and count > 9:
+
+                #compare previous frame to current frame
+                diffrence = cv2.absdiff(previous_frame, frame)
+                grayscale_diffrence = cv2.cvtColor(diffrence, cv2.COLOR_BGR2GRAY)
+
+                #assigns image only if the diffrence exceeds threshold
+                retval, diffrent_image = cv2.threshold(grayscale_diffrence, 10, 255, cv2.THRESH_BINARY)# (x,threshold,x,x)
+
+                #if the diffrence is greater than the threshold
+                if np.any(diffrent_image):
+                    unique_frames += 1
+                    print("New image detected: ", unique_frames)
+                    count = 0
+                
+
             #display the capture
             cv2.imshow('Screen Capture', frame)
 
-            #get key press
+            #reset previous frame
+            previous_frame = frame.copy()
+            if count < 10:
+                count += 1
+            #print(count)
+
+
             key = cv2.waitKey(1) & 0xFF 
             
             #stop recording
@@ -155,5 +192,3 @@ if __name__ == "__main__":
             print("Please type 'r', 's', or 'e'.")
 
             
-
-
