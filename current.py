@@ -1,18 +1,14 @@
 ##Deliverable 1: Employing openCV
 
 # Create a virtual camera that is locked to one screen.(COMPLETE) 
-# Create functions to adjust its bounds, position, and source screen.(NEEDS MIN/MAX BOUNDS)
+# Create functions to adjust its bounds, position, and source screen.(NO MIN/MAX BOUNDS)
 # Make a function to start and stop the recording.(COMPLETE)
 # Extract each individual frame from the video and calculate if they have changed.(COMPLETE)
-# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.
-# Remove noise from the frames.
+# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.(NEEDS_NUE_VARIATION)
+# Remove noise from the frames.(COMPLETE~)
 
+##2/8 works well for text files, does not work well for images, needs tuning and hue detection!!
 
-
-#import torch
-#import pandas
-#import sklearn
-#import pyvirtualcam
 import sys
 import numpy as np
 import cv2
@@ -117,8 +113,12 @@ def start_recording(window_title):
                     unique_frames += 1
                     print("New image detected: ", unique_frames)
                     count = 0
-                
 
+                #display text regions
+                masked_frame = detect_text_regions(frame)
+                cv2.imshow('Text Regions', masked_frame)
+
+            
             #display the capture
             cv2.imshow('Screen Capture', frame)
 
@@ -153,7 +153,7 @@ def on_press(key):
     elif key.char == 's':
         adjustments["vertical"] += 100
     elif key.char == 'x':
-        adjustments["zoom"] += 100
+        adjustments["zoom"] += 100## + = out, - = in
     elif key.char == 'z':
         adjustments["zoom"] -= 100
     #print(f"Adjustments updated: {adjustments}")
@@ -168,6 +168,37 @@ def adjust_source():
 
     return window_title
 
+def detect_text_regions(frame):##NEEDS_TUNING
+
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)##redundant??
+
+    #reduce noise with gaussian blur
+    blur_frame = cv2.GaussianBlur(gray_frame, (5,5), 0)## (width,hight)
+
+    #detect edges
+    edge_frame = cv2.Canny(blur_frame, 50, 150)## (x, min, max)
+
+    #find contours
+    contours, _ = cv2.findContours(edge_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    #mask non-text regions
+    mask = np.zeros_like(gray_frame)
+
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        aspect_ratio = w / h
+
+        #filter out non-text regions
+        if aspect_ratio > 0.1 and aspect_ratio < 10:## (min,max) text aspect ratio
+            cv2.drawContours(mask, [contour], -1, (255), -1)## (image, x, contour, color, x)
+
+    #apply mask
+    masked_frame = cv2.bitwise_and(gray_frame, gray_frame, mask=mask)
+
+    return masked_frame
+
+    
+##HUE DETECTION
 
 
 if __name__ == "__main__":
@@ -192,3 +223,4 @@ if __name__ == "__main__":
             print("Please type 'r', 's', or 'e'.")
 
             
+
