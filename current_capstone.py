@@ -106,19 +106,22 @@ def start_recording():
 def on_press(key):
     global adjustments
     
-    if key.char =='a':
-        adjustments["horizontal"] -= 100
-    elif key.char == 'd':
-        adjustments["horizontal"] += 100
-    elif key.char =='w':
-        adjustments["vertical"] -= 100
-    elif key.char == 's':
-        adjustments["vertical"] += 100
-    elif key.char == 'x':
-        adjustments["zoom"] -= 100## + = out, - = in
-    elif key.char == 'z':
-        adjustments["zoom"] += 100
+    try:
+        if key.char =='a':
+            adjustments["horizontal"] -= 100
+        elif key.char == 'd':
+            adjustments["horizontal"] += 100
+        elif key.char =='w':
+            adjustments["vertical"] -= 100
+        elif key.char == 's':
+            adjustments["vertical"] += 100
+        elif key.char == 'x':
+            adjustments["zoom"] -= 100## + = out, - = in
+        elif key.char == 'z':
+            adjustments["zoom"] += 100
     #print(f"Adjustments updated: {adjustments}")
+    except AttributeError:
+        pass
     
 
 def adjust_source():
@@ -135,31 +138,25 @@ def detect_text_regions(frame):##NEEDS_TUNING
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)##redundant??
 
     #reduce noise with gaussian blur
-    blur_frame = cv2.GaussianBlur(gray_frame, (5,5), 0)## (width,hight)
+    filter_frame = cv2.GaussianBlur(gray_frame, (5,5), 0)## (width,hight)
+
+    #thresholding
+    #_, threshold_frame = cv2.threshold(filter_frame, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    threshold_frame = cv2.adaptiveThreshold(filter_frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                         cv2.THRESH_BINARY_INV, 21, 5) #(block size, constant)larger mor aggresive filtering
 
     #detect edges
-    edge_frame = cv2.Canny(blur_frame, 30, 100)## (x, min, max)
+    #edge_frame = cv2.Canny(threshold_frame, 30, 100)## (x, min, max)
+    #deskewing
 
-    #find contours
-    contours, _ = cv2.findContours(edge_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))#
+    edge_frame = cv2.morphologyEx(threshold_frame, cv2.MORPH_OPEN, kernel)#morph close too
 
-    #mask non-text regions
-    mask = np.zeros_like(gray_frame)
+    processed_frame = edge_frame
 
-    for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        aspect_ratio = w / h
+    return processed_frame
 
-        #filter out non-text regions
-        if aspect_ratio > 0.1 and aspect_ratio < 10:## (min,max) text aspect ratio
-            cv2.drawContours(mask, [contour], -1, (255), -1)## (image, x, contour, color, x)
-
-    #apply mask
-    masked_frame = cv2.bitwise_and(gray_frame, gray_frame, mask=mask)
-
-    return masked_frame
-
-    
+        
 ##HUE DETECTION
 
 
