@@ -1,19 +1,20 @@
 ##Deliverable 1: Employing openCV
 
 # Create a virtual camera that is locked to one screen.(COMPLETE) 
-# Create functions to adjust its bounds, position, and source screen.(NO MIN/MAX BOUNDS)
+# Create functions to adjust its bounds, position, and source screen.(COMPLETE)
 # Make a function to start and stop the recording.(COMPLETE)
 # Extract each individual frame from the video and calculate if they have changed.(COMPLETE)
-# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.(NEEDS_NUE_VARIATION)
-# Remove noise from the frames.(COMPLETE~)
+# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.(~COMPLETE)
+    ###NOTE REPLACED EDGE DETECTION WITH MORPHOLOGICAL OPENING
+# Remove noise from the frames.(~COMPLETE)
 
-##2/8 works well for text files, does not work well for images, needs tuning and hue detection!!
+##2/16 preprocesses txt format images, may not work well low contrast images with complex backgrounds
 
 import sys
 import numpy as np
 import cv2
 import pynput
-import pygetwindow as gw
+#import pygetwindow as gw
 from PIL import ImageGrab
 
 adjustments = {
@@ -85,6 +86,30 @@ def start_recording():
             cv2.imshow('Screen Capture', display_frame)
             cv2.imshow('Text Regions', cv2.resize(masked_frame, original_size, interpolation=cv2.INTER_AREA))
 
+
+            #check if the frame is valid size
+            if previous_frame is not None and processed_frame.shape != previous_frame.shape:
+                previous_frame = None
+                count = 0
+                #cv2.imshow('Screen Capture', frame)
+                previous_frame = processed_frame.copy()
+                continue
+            if previous_frame is not None and count > 9:
+
+                #compare previous frame to current frame
+                diffrence = cv2.absdiff(previous_frame, processed_frame)
+                grayscale_diffrence = cv2.cvtColor(diffrence, cv2.COLOR_BGR2GRAY)
+
+                #assigns image only if the diffrence exceeds threshold
+                retval, diffrent_image = cv2.threshold(grayscale_diffrence, 10, 255, cv2.THRESH_BINARY)# (x,threshold,x,x)
+
+                #if the diffrence is greater than the threshold
+                if np.any(diffrent_image):
+                    unique_frames += 1
+                    print("New image detected: ", unique_frames)
+                    count = 0
+
+
             #record unique frames
             previous_frame = processed_frame.copy()
             if count < 10:
@@ -137,19 +162,20 @@ def detect_text_regions(frame):##NEEDS_TUNING
 
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)##redundant??
 
-    #reduce noise with gaussian blur
-    filter_frame = cv2.GaussianBlur(gray_frame, (5,5), 0)## (width,hight)
+    #reduce noise
+    filter_frame = cv2.GaussianBlur(gray_frame, (5,5), 0)## (width,hight)  --  5,5
 
     #thresholding
-    #_, threshold_frame = cv2.threshold(filter_frame, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    threshold_frame = cv2.adaptiveThreshold(filter_frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+    threshold_frame = cv2.adaptiveThreshold(filter_frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, #  --  255,21,5
                                          cv2.THRESH_BINARY_INV, 21, 5) #(block size, constant)larger mor aggresive filtering
 
-    #detect edges
-    #edge_frame = cv2.Canny(threshold_frame, 30, 100)## (x, min, max)
     #deskewing
+    ##############################
+    ##############################
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))#
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))#  --  3,3
+    #dialation
     edge_frame = cv2.morphologyEx(threshold_frame, cv2.MORPH_OPEN, kernel)#morph close too
 
     processed_frame = edge_frame
