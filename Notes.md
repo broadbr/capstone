@@ -2,8 +2,17 @@
 
 INSTALLS
     pip install opencv-contrib-python
+    -m pip install paddlepaddle
+    pip install paddleocr
 
-Ryan Broadbent 11/11/24
+LIBRARIES
+
+
+IMPORTANT INFO
+    current_capstone.py is the up to date project file
+    next_capstone.py is the in progress project file
+    other .py files contain functions that are no longer being implimented
+
 
 CS 498 capstone Notes
 
@@ -24,3 +33,7 @@ CS 498 capstone Notes
 2/25
     creating data folder for saving text
     performance issues
+
+
+3/2 
+    switching to cpu based OCR

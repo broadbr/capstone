@@ -1,13 +1,6 @@
-##Deliverable 1: Employing openCV
-
-# Create a virtual camera that is locked to one screen.(COMPLETE) 
-# Create functions to adjust its bounds, position, and source screen.(NO MIN/MAX BOUNDS)
-# Make a function to start and stop the recording.(COMPLETE)
-# Extract each individual frame from the video and calculate if they have changed.(COMPLETE)
-# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.(NEEDS_NUE_VARIATION)
-# Remove noise from the frames.(COMPLETE~)
-
-##2/8 works well for text files, does not work well for images, needs tuning and hue detection!!
+##THIS FILE ALLOWS FOR WINDOW CAPTURING
+##2/_ FUTURE WORK WILL IMPLEMENT DISPLAY CAPTURING INSTED
+##Ryan Broadbent
 
 import sys
 import numpy as np

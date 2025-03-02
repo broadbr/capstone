@@ -1,5 +1,7 @@
+##THIS FILE ALLOWS FOR GPU OR CPU BASED TEXT DETECTION
+##3/2 MOVING AWAY FROM GPU BASED TEXT DETECTION
+
 ##Deliverable 2: Employing easyOCR
-                 #3/2NOTE: NOW USING PADDLEOCR INSTEAD
 
 ##Highlight areas of interest and develop a mask for the frames.(REDUNDANT)
 ##Use language identification to extract text from highlighted regions.(COMPLETE)
@@ -14,7 +16,9 @@ import cv2
 import json
 import os
 import pynput
+#import pygetwindow as gw
 from PIL import ImageGrab
+import easyocr
 from paddleocr import PaddleOCR, draw_ocr
 
 adjustments = {
@@ -23,6 +27,7 @@ adjustments = {
     "zoom": 0
 }
 
+easy_reader = easyocr.Reader(['en'])
 paddle_reader = PaddleOCR(use_angle_cls=True, lang='en')
 ocr_results = []
 processor = ""
@@ -119,7 +124,11 @@ def start_recording():
                     print("New image detected: ", unique_frames)
 
                     #proccess frame ocr
-                    paddle_ocr(processed_frame, unique_frames)
+                    if processor == "y":
+                        easy_ocr(processed_frame, unique_frames)
+
+                    elif processor == "n":
+                        paddle_ocr(processed_frame, unique_frames)
 
                     count = 0
 
@@ -197,6 +206,23 @@ def detect_text_regions(frame):##NEEDS_TUNING
     return processed_frame
 
 
+def easy_ocr(frame, unique_frame_count):
+
+    global ocr_results
+
+    results = easy_reader.readtext(frame)
+
+
+    ocr_data = {
+        "frame_index": unique_frame_count,
+        "text": [text for _, text, _ in results]
+    }
+    ocr_results.append(ocr_data)
+
+
+    with open(json_path, "w") as json_file:
+        json.dump(ocr_results, json_file, indent=4)
+
         
 def paddle_ocr(frame, unique_frame_count):
 
@@ -221,6 +247,13 @@ def paddle_ocr(frame, unique_frame_count):
 
 if __name__ == "__main__":
 
+
+    while True:
+        processor = input("Does your machine have a GPU? (y/n): ").strip().lower()
+        if processor in ["y", "n"]:
+            break
+        print("Invalid input. Please enter 'y' or 'n'.")
+    
 
     while True:
         user_input = input("Type 'r' to start recording, 'l' to stop, or 'e' to terrminate.").lower()

@@ -1,14 +1,7 @@
-##Deliverable 1: Employing openCV
-
-# Create a virtual camera that is locked to one screen.(COMPLETE) 
-# Create functions to adjust its bounds, position, and source screen.(COMPLETE)
-# Make a function to start and stop the recording.(COMPLETE)
-# Extract each individual frame from the video and calculate if they have changed.(COMPLETE)
-# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.(NEEDS_NUE_VARIATION)
-        ## seems to be keeping edges and cyan, should keep only text
-# Remove noise from the frames.(COMPLETE~)
-
-##2/8 works well for text files, does not work well for images, needs tuning and hue detection!!
+##FIRST ATTEMPT AT IMPLIMENTING HUE DETECTION
+##THE FUNCTIONS TO SELECT A HUE WORK BUT THE DETECTION DOES NOT
+##2/2x? SWITCHING TO ADDAPTIVE THRESHOLDING 
+##Ryan Broadbent
 
 import sys
 import numpy as np

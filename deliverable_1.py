@@ -1,23 +1,24 @@
-##Deliverable 2: Employing easyOCR
+##FIRST COMPLETE DELIVERABLE
+#Ryan Broadbent 2/2x?
 
-##Highlight areas of interest and develop a mask for the frames. 
+##Deliverable 1: Employing openCV
 
-##Use language identification to extract text from highlighted regions.
-#  
-##Develop an overlay to display the regions as highlighted in the recording preview. 
-##Segment and format the resulting text into chunks suitable for translation. 
-##Store text chunks in a structured format.
+# Create a virtual camera that is locked to one screen.(COMPLETE) 
+# Create functions to adjust its bounds, position, and source screen.(COMPLETE)
+# Make a function to start and stop the recording.(COMPLETE)
+# Extract each individual frame from the video and calculate if they have changed.(COMPLETE)
+# If the frame is unique enough, process it for hue variation and edge detection to determine what in the frame is text.(~COMPLETE)
+    ###NOTE REPLACED EDGE DETECTION WITH MORPHOLOGICAL OPENING
+# Remove noise from the frames.(~COMPLETE)
 
+##2/16 preprocesses txt format images, may not work well low contrast images with complex backgrounds
 
 import sys
 import numpy as np
 import cv2
-import json
-import os
 import pynput
 #import pygetwindow as gw
 from PIL import ImageGrab
-import easyocr
 
 adjustments = {
     "horizontal": 0,
@@ -25,13 +26,6 @@ adjustments = {
     "zoom": 0
 }
 
-reader = easyocr.Reader(['en'])
-ocr_results = []
-
-##### CHANGE THIS TO YOUR DESIRED SAVE DIRECTORY #####
-save_dir = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data"
-os.makedirs(save_dir, exist_ok=True)
-json_path = os.path.join(save_dir, "ocr_results.json")
 
 #captures a display
 def capture_display(adjustments):
@@ -116,10 +110,6 @@ def start_recording():
                 if np.any(diffrent_image):
                     unique_frames += 1
                     print("New image detected: ", unique_frames)
-
-                    #proccess frame ocr
-                    process_ocr(processed_frame, unique_frames)
-
                     count = 0
 
 
@@ -194,24 +184,6 @@ def detect_text_regions(frame):##NEEDS_TUNING
     processed_frame = edge_frame
 
     return processed_frame
-
-
-def process_ocr(frame, unique_frame_count):
-
-    global ocr_results
-
-    results = reader.readtext(frame)
-
-
-    ocr_data = {
-        "frame_index": unique_frame_count,
-        "text": [text for _, text, _ in results]
-    }
-    ocr_results.append(ocr_data)
-
-
-    with open(json_path, "w") as json_file:
-        json.dump(ocr_results, json_file, indent=4)
 
         
 ##HUE DETECTION
