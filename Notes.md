@@ -1,5 +1,9 @@
 # capstone
 
+citeation
+    "Calibre-Regular.tff" - denvash
+    https://github.com/denvash/dennisvash.com/blob/master/src/fonts/Calibre/Calibre-Regular.ttf
+
 INSTALLS
     pip install opencv-contrib-python
     -m pip install paddlepaddle
@@ -37,3 +41,8 @@ CS 498 capstone Notes
 
 3/2 
     switching to cpu based OCR
+
+3/12
+    text highlighting is working.
+    had issues resizing the ourput, using fixed dimensions solved them.
+    still need to clean up results before translating

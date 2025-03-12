@@ -1,11 +1,4 @@
-##Deliverable 2: Employing easyOCR
-                 #3/2NOTE: NOW USING PADDLEOCR INSTEAD
-
-##Highlight areas of interest and develop a mask for the frames.(REDUNDANT)
-##Use language identification to extract text from highlighted regions.(COMPLETE)
-##Develop an overlay to display the regions as highlighted in the recording preview.()
-##Segment and format the resulting text into chunks suitable for translation. ()
-##Store text chunks in a structured format.(UNFORMATTED JSON)
+## LIKE PROCESSOR CHOICE BUT ONLY PADDLEOCR
 
 
 import sys
