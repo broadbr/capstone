@@ -1,11 +1,14 @@
-##CURRENT_BUILD: Employing easyOCR
+##Deliverable 2: COMPLETE 3/22
+# Capture text from display, outputs the frames with highlighted text, 
+# and stores the text in a structured format.
+
+
+# Employing easyOCR
                  #3/2NOTE: NOW USING PADDLEOCR INSTEAD
 
-#####################deliverable 2 requirements####################
-
-##Highlight areas of interest and develop a mask for the frames.(replaced)
+##Highlight areas of interest and develop a mask for the frames.()
 ##Use language identification to extract text from highlighted regions.(COMPLETE)
-##Develop an overlay to display the regions as highlighted in the recording preview.(Complete)
+##Develop an overlay to display the regions as highlighted in the recording preview.(~complete)
                                         ##currently have two seperate windows could be combined
 ##Segment and format the resulting text into chunks suitable for translation. (complete3/22)
 ##Store text chunks in a structured format.(Complete3/22)

@@ -46,3 +46,10 @@ CS 498 capstone Notes
     text highlighting is working.
     had issues resizing the ourput, using fixed dimensions solved them.
     still need to clean up results before translating
+    gitignore keeps tracking my data dir
+
+3/22 
+    capture text is proccessed for whitespace and puncuation,
+    then stored in sentence structure. 
+    **need to get one output windoe instead of two
+    **using full path for save dir  
