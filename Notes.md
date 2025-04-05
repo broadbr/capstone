@@ -53,3 +53,8 @@ CS 498 capstone Notes
     then stored in sentence structure. 
     **need to get one output windoe instead of two
     **using full path for save dir  
+
+4/5
+    Combined both displays into one by changing the display source when ocr starts
+    this cause zooming to break, fixed zooming by implimenting a flag
+    flag sets whenever a zoom occurs and refreshes the display.
