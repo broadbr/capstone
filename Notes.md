@@ -5,11 +5,44 @@ citeation
     https://github.com/denvash/dennisvash.com/blob/master/src/fonts/Calibre/Calibre-Regular.ttf
 
 INSTALLS
+
+    pip install PyQt5==5.15.11
+    pip install argostranslate==1.5.2 --no-deps
+    pip install ctranslate2
+    pip install --upgrade argostranslate
+
+
+    pip uninstall ctranslate2 pyqt5 sentencepiece -y
+    pip install ctranslate2==2.4.0 sentencepiece==0.1.96
+
+    pip install numpy opencv-python paddleocr pynput pillow
+
     pip install opencv-contrib-python
     -m pip install paddlepaddle
     pip install paddleocr
+    pip install argos-translate
+
+    argos-translate-cli --install-lang en fr
+
 
 LIBRARIES
+
+
+DO 
+    conda create -n argos_env python=3.9
+    conda activate argos_env
+    conda info --envs
+
+    git clone https://github.com/argosopentech/argos-translate.git
+    cd argos-translate
+    pip install .
+
+
+    add 'encoding="utf-8"' to setup.py
+
+    pip show argostranslate
+    pip install argostranslate
+
 
 
 IMPORTANT INFO
@@ -58,3 +91,6 @@ CS 498 capstone Notes
     Combined both displays into one by changing the display source when ocr starts
     this cause zooming to break, fixed zooming by implimenting a flag
     flag sets whenever a zoom occurs and refreshes the display.
+
+4/6 
+    switching to argos-translate to improve performance over transformers.

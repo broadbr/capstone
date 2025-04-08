@@ -1,7 +1,7 @@
-##CURRENT_BUILD: Employing easyOCR
-                 #3/2NOTE: NOW USING PADDLEOCR INSTEAD
+##CURRENT_BUILD:
 
 #####################deliverable 3 requirements####################
+##Employing googletrans
 
 #Implement a function to periodically send and receive text files from the library. 
 #Integrate compatibility with an offline translation model. 
@@ -23,6 +23,9 @@ import re
 import pynput
 from PIL import ImageGrab
 from paddleocr import PaddleOCR, draw_ocr
+
+import torch
+from transformers import MarianMTModel, MarianTokenizer
 
 adjustments = {
     "horizontal": 0,
@@ -86,6 +89,10 @@ def start_recording():
     count = 0
     highlighted_frame = None
 
+    ##4/5
+    target_language = 'fr'
+    tokenizer, model = load_french_model(target_language)
+
     while True:
         try:
             #capture display
@@ -113,7 +120,7 @@ def start_recording():
                 adjustments_changed = False
                 unique_frames += 1
                 print("New image detected (resize or adjustment):", unique_frames)
-                highlighted_frame = paddle_ocr(processed_frame, unique_frames)
+                highlighted_frame = paddle_ocr(processed_frame, unique_frames, tokenizer, model)
 
             #process every 10 frames
             elif count > 9:
@@ -199,7 +206,7 @@ def detect_text_regions(frame):##NEEDS_TUNING
 
 
         
-def paddle_ocr(frame, unique_frame_count):
+def paddle_ocr(frame, unique_frame_count, tokenizer, language_model):
 
     global ocr_results
 
@@ -219,7 +226,21 @@ def paddle_ocr(frame, unique_frame_count):
 
                                                                         ##relative path to font file
     
-    ## creates wide frame with all data
+    
+    ##4/5
+    translated_text = translate_sentences(extracted_text, tokenizer, language_model)
+
+    #display text
+    translated_display = np.zeros((500, 800, 3), dtype=np.uint8)
+    y_offset = 20
+    for line in translated_text:
+        cv2.putText(translated_display, line, (10, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        y_offset += 30
+    cv2.imshow('Translated Text', translated_display)
+    
+    
+    
+    ##creates wide frame with all data
     ##highlighted_frame = draw_ocr(frame, boxes, texts, scores, font_path='Calibre-Regular.ttf')
     highlighted_frame = draw_ocr(frame, boxes, None, None, font_path='Calibre-Regular.ttf')
 
@@ -270,6 +291,29 @@ def format_json(ocr_results):
             "formated_text": sentences
         })
     return formatted_data
+
+#spanish model
+def load_spanish_model(target_language='es'):
+    model_name = f"Helsinki-NLP/opus-en-es-{target_language}"
+    tokenizer = MarianTokenizer.from_pretrained(model_name)
+    language_model = MarianMTModel.from_pretrained(model_name)
+    return tokenizer, language_model
+
+#french model
+def load_french_model(target_language='fr'):
+    model_name = f"Helsinki-NLP/opus-en-fr-{target_language}"
+    tokenizer = MarianTokenizer.from_pretrained(model_name)
+    language_model = MarianMTModel.from_pretrained(model_name)
+    return tokenizer, language_model
+
+#te=ranslate sentences
+def translate_sentences(sentences, tokenizer, model):
+    #tokenize
+    inputs = tokenizer(sentences, return_tensors="pt", padding=True, truncation=True)
+    translated = model.generate(**inputs)
+    #decode
+    translated_text = tokenizer.batch_decode(translated, skip_special_tokens=True)
+    return translated_text
 
 
 if __name__ == "__main__":

@@ -24,13 +24,25 @@ import pynput
 from PIL import ImageGrab
 from paddleocr import PaddleOCR, draw_ocr
 
+import argostranslate.package
+import argostranslate.translate
+import torch
+torch.utils.logging.set_verbosity(torch.utils.logging.DEBUG)
+
+installed_languages = argostranslate.translate.get_installed_languages()
+
+#from translate import Translator
+#translator = Translator(from_lang="en", to_lang="fr")
+#print(translator.translate("translate opperational"))
+
+
 adjustments = {
     "horizontal": 0,
     "vertical": 0,
     "zoom": 0
 }
 
-paddle_reader = PaddleOCR(use_angle_cls=True, lang='en')
+paddle_reader = PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False)
 ocr_results = []
 processor = ""
 
@@ -199,7 +211,7 @@ def detect_text_regions(frame):##NEEDS_TUNING
 
 
         
-def paddle_ocr(frame, unique_frame_count):
+def paddle_ocr(frame, unique_frame_count,  from_lang="en", to_lang="fr"):
 
     global ocr_results
 
@@ -219,6 +231,23 @@ def paddle_ocr(frame, unique_frame_count):
 
                                                                         ##relative path to font file
     
+
+    #translated_text = [translate_text(text, from_lang, to_lang) for text in extracted_text]
+    translated_text = []
+    for text in extracted_text:
+        translated = translate_text(text, from_lang, to_lang)
+        translated_text.append(translated)
+
+
+    #display text  4/6
+    translated_display = np.zeros((500, 300, 3), dtype=np.uint8)
+    y_offset = 20
+    for line in translated_text:
+        cv2.putText(translated_display, line, (10, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        y_offset += 30
+    cv2.imshow('Translated Text', translated_display)
+
+
     ## creates wide frame with all data
     ##highlighted_frame = draw_ocr(frame, boxes, texts, scores, font_path='Calibre-Regular.ttf')
     highlighted_frame = draw_ocr(frame, boxes, None, None, font_path='Calibre-Regular.ttf')
@@ -229,7 +258,8 @@ def paddle_ocr(frame, unique_frame_count):
 
     ocr_data = {
         "frame_index": unique_frame_count,
-        "text": extracted_text
+        "text": extracted_text,
+        "translated_text": translated_text ##4/6
     }
     ocr_results.append(ocr_data)
 
@@ -272,8 +302,40 @@ def format_json(ocr_results):
     return formatted_data
 
 
-if __name__ == "__main__":
+def translate_text(text, from_lang="en", to_lang="fr"):
+    try:
+        #translation direction
+        from_lang_obj = next((lang for lang in installed_languages if lang.code == from_lang), None)
+        to_lang_obj = next((lang for lang in installed_languages if lang.code == to_lang), None)
 
+        if not from_lang_obj or not to_lang_obj:
+            raise ValueError(f"Language codes not installed: {from_lang}, {to_lang}")
+
+        translation = from_lang_obj.get_translation(to_lang_obj)
+        return translation.translate(text)
+    
+    except Exception as e:
+        print(f"[Translation Error] {text} — {e}")
+        return text  ##fallback
+
+def install_argos_package(from_lang="en", to_lang="fr"):
+    available_packages = argostranslate.package.get_available_packages()
+    matching_package = next(
+        (p for p in available_packages if p.from_code == from_lang and p.to_code == to_lang),
+        None
+    )
+    
+    if matching_package:
+        print(f"Downloading {from_lang} → {to_lang} model...")
+        download_path = matching_package.download()
+        argostranslate.package.install_from_path(download_path)
+        print("Installation complete!")
+    else:
+        print("Requested language pair not found.")
+
+
+if __name__ == "__main__":
+    install_argos_package("en", "fr")
 
     while True:
         user_input = input("Type 'r' to start recording, 'l' to stop, or 'e' to terrminate.").lower()
