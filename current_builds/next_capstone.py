@@ -78,7 +78,7 @@ def capture_display(adjustments):
 
 #while recording
 def start_recording():
-
+    global adjustments, adjustments_changed, ocr_results
 
     clear_screenshots(directory)
 
@@ -90,7 +90,7 @@ def start_recording():
         with open(formatted_json_path, "w") as formatted_file:
             json.dump([], formatted_file)
 
-    global adjustments, adjustments_changed
+
     listener = pynput.keyboard.Listener(on_press=on_press)
     listener.start()
 
@@ -337,13 +337,18 @@ if __name__ == "__main__":
                 text_to_translate = " ".join(frame_data["formated_text"])
                 print(f"Original text for frame {frame_index}: {text_to_translate}")
 
+                #check char limit
+                if len(text_to_translate) > 500:
+                    print("Translation exceeds 500 character limit.")
+                    continue
+
                 #translate text
                 from translate import Translator
                 translator = Translator(from_lang="en", to_lang="fr")
                 translated_text = translator.translate(text_to_translate)
 
                 # Print the translated text
-                print(f"Translated text for frame {frame_index}: {translated_text}")
+                print(f"Translated text for frame {frame_index}: {translated_text}\n")
 
             except Exception as e:
                 print(f"Error during translation: {e}")
