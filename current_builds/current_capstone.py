@@ -36,6 +36,7 @@ processor = ""
 
 ##### DESIRED SAVE DIRECTORY #####
 save_dir = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data"
+directory = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data\\photos"
 os.makedirs(save_dir, exist_ok=True)
 json_path = os.path.join(save_dir, "ocr_results.json")
 formatted_json_path = os.path.join(save_dir, "formatted_ocr_results.json")
@@ -77,7 +78,19 @@ def capture_display(adjustments):
 
 #while recording
 def start_recording():
-    global adjustments, adjustments_changed
+    global adjustments, adjustments_changed, ocr_results
+
+    clear_screenshots(directory)
+
+    if os.path.exists(json_path):
+        with open(json_path, "w") as json_file:
+            json.dump([], json_file)
+            
+    if os.path.exists(formatted_json_path):
+        with open(formatted_json_path, "w") as formatted_file:
+            json.dump([], formatted_file)
+
+
     listener = pynput.keyboard.Listener(on_press=on_press)
     listener.start()
 
@@ -218,6 +231,10 @@ def paddle_ocr(frame, unique_frame_count):
             scores.append(word_info[1][1])         ##word_info[1][1] is confidence score
 
                                                                         ##relative path to font file
+
+    screenshots_dir = os.path.join(save_dir, "photos")
+    screenshot_path = os.path.join(screenshots_dir, f"frame_{unique_frame_count}.png")
+    cv2.imwrite(screenshot_path, frame)
     
     ## creates wide frame with all data
     ##highlighted_frame = draw_ocr(frame, boxes, texts, scores, font_path='Calibre-Regular.ttf')
@@ -271,12 +288,20 @@ def format_json(ocr_results):
         })
     return formatted_data
 
+def clear_screenshots(directory):
+    for file in os.listdir(directory):
+        file_path = os.path.join(directory, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
 
 if __name__ == "__main__":
 
 
+## ADD FUNTION TO VIEW CAPTURED FRAMES
+
     while True:
-        user_input = input("Type 'r' to start recording, 'l' to stop, or 'e' to terrminate.").lower()
+        user_input = input("Type 'r' to start recording, 'l' to stop, 't' to ranslate, or 'e' to terrminate.").lower()
         
 
         if user_input == "r":
@@ -286,6 +311,50 @@ if __name__ == "__main__":
 
         elif user_input == "l":
             print("Capture is not running. Use 'r' to begin recording.")
+
+        elif user_input == "t":
+            try:
+                #load formatted OCR results
+                if not os.path.exists(formatted_json_path):
+                    print("No captures found. Please run a capture first.")
+                    continue
+
+                formatted_results = load_data(formatted_json_path)
+
+                #ask the for frame index
+                frame_index = input("Enter the frame index you want to translate: ")
+                if not frame_index.isdigit():
+                    print("Invalid index. Please enter a valid number.")
+                    continue
+
+                frame_index = int(frame_index)
+
+                #find the frame in the formatted results
+                frame_data = next((entry for entry in formatted_results if entry["frame_index"] == frame_index), None)
+                if not frame_data:
+                    print(f"Invalid index {frame_index}.")
+                    continue
+
+                #get text
+                text_to_translate = " ".join(frame_data["formated_text"])
+                print(f"Original text for frame {frame_index}: {text_to_translate}")
+
+                #check char limit
+                if len(text_to_translate) > 500:
+                    print("Translation exceeds 500 character limit.")
+                    continue
+
+                #translate text
+                from translate import Translator
+                translator = Translator(from_lang="en", to_lang="fr")
+                translated_text = translator.translate(text_to_translate)
+
+                # Print the translated text
+                print(f"Translated text for frame {frame_index}: {translated_text}\n")
+
+            except Exception as e:
+                print(f"Error during translation: {e}")
+
 
         elif user_input == "e":
             print("Termminating...")

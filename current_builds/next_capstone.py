@@ -3,16 +3,17 @@
 
 #####################deliverable 3 requirements####################
 
-#Implement a function to periodically send and receive text files from the library. 
-#Integrate compatibility with an offline translation model. 
-#Create a function to safely edit the target language.
-
-#Read format and display the translated text to a separate window. 
-#Refine the text detection and identification methods. 
-#Add function to save current translation and original frame.
+#Implement a function to periodically send and receive text files from the library.(user can send text munually)
+#Integrate compatibility with an offline translation model.(This caused compatibility issues with the paddleOCR model)(removed)
+#Create a function to safely edit the target language.(complete)
+#Read format and display the translated text to a separate window.(outputs to terminal)(functionally complete)
+#Refine the text detection and identification methods.(completed)
+#Add function to save current translation and original frame.(user can view original frame and translated text)
 
 #additional updates:
 ## 4/5 merged windows, fixed zooming by adding a flag
+## 4/11 added screenshots, and translation
+## 4/19 added character limmit detection and language selection
 
 import sys
 import numpy as np
@@ -298,8 +299,10 @@ def clear_screenshots(directory):
 if __name__ == "__main__":
 
 
+## ADD FUNTION TO VIEW CAPTURED FRAMES
+
     while True:
-        user_input = input("Type 'r' to start recording, 'l' to stop, 't' to ranslate, or 'e' to terrminate.").lower()
+        user_input = input("Type 'r' to start recording, 'l' to stop, 't' to translate, 'v' to view, 'c' to change target language, or 'e' to terrminate.").lower()
         
 
         if user_input == "r":
@@ -309,6 +312,15 @@ if __name__ == "__main__":
 
         elif user_input == "l":
             print("Capture is not running. Use 'r' to begin recording.")
+
+        elif user_input == "c":
+            #change the target language
+            if target_language == "fr":
+                target_language = "es"
+                print("Target language is now Spanish.")
+            else:
+                target_language = "fr"
+                print("Target language is now French.")
 
         elif user_input == "t":
             try:
@@ -352,6 +364,51 @@ if __name__ == "__main__":
 
             except Exception as e:
                 print(f"Error during translation: {e}")
+
+        elif user_input == "v":
+            try:
+                if not os.path.exists(formatted_json_path):
+                    print("No existing captures.")
+                    continue
+
+                formatted_results = load_data(formatted_json_path)
+
+                #list entrie count
+                num_entries = len(formatted_results)
+                print(f"There are {num_entries} captured images to traslate.")
+
+                #select frame index
+                frame_index = input("Enter the frame index you want to view: ")
+                if not frame_index.isdigit():
+                    print("Invalid index.")
+                    continue
+
+                frame_index = int(frame_index)
+
+                #check for frame
+                frame_data = next((entry for entry in formatted_results if entry["frame_index"] == frame_index), None)
+                if not frame_data:
+                    print(f"Invalid index")
+                    continue
+
+                #display the screenshot
+                screenshot_path = os.path.join(directory, f"frame_{frame_index}.png")
+                screenshot = cv2.imread(screenshot_path)
+                screenshot_width = 800
+                screenshot_height = 600
+                resized_screenshot = cv2.resize(screenshot, (screenshot_width, screenshot_height))
+
+                cv2.imshow(f"Frame {frame_index}", resized_screenshot)
+                print(f"Press 'l' to close.")
+
+                key = cv2.waitKey(0)
+                if key == ord('l'):
+                    break
+                cv2.destroyAllWindows()
+
+            except Exception as e:
+                print(f"Error while viewing screenshot: {e}")
+
 
 
         elif user_input == "e":
