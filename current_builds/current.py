@@ -37,6 +37,7 @@ paddle_reader = PaddleOCR(use_angle_cls=True, lang='en')
 ocr_results = []
 processor = ""
 
+
 ##### DESIRED SAVE DIRECTORY #####
 save_dir = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data"
 directory = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data\\photos"
@@ -297,25 +298,119 @@ def clear_screenshots(directory):
         if os.path.isfile(file_path):
             os.remove(file_path)
 
+def view_frame():
+        try:
+            if not os.path.exists(formatted_json_path):
+                print("No existing captures.")
+                return
+
+            #create prompt for frame index
+            view_window = tk.Toplevel()
+            view_window.title("View Captured Frames")
+            view_window.geometry("300x150")
+
+            tk.Label(view_window, text="Enter the frame index to view:", font=("Arial", 10)).pack(pady=10)
+
+            frame_index_var = tk.StringVar()
+            entry = tk.Entry(view_window, textvariable=frame_index_var, font=("Arial", 10))
+            entry.pack(pady=10)
+
+            def submit():
+                frame_index = frame_index_var.get()
+                if not frame_index.isdigit():
+                    print("Invalid index.")
+                    view_window.destroy()
+                    return
+
+                frame_index = int(frame_index)
+                formatted_results = load_data(formatted_json_path)
+
+                #validate index
+                frame_data = next((entry for entry in formatted_results if entry["frame_index"] == frame_index), None)
+                if not frame_data:
+                    print(f"Invalid index {frame_index}.")
+                    view_window.destroy()
+                    return
+
+                #show screenshot
+                screenshot_path = os.path.join(directory, f"frame_{frame_index}.png")
+                screenshot = cv2.imread(screenshot_path)
+                if screenshot is None:
+                    print(f"Failed to load screenshot for frame {frame_index}.")
+                    view_window.destroy()
+                    return
+
+                screenshot_width = 800
+                screenshot_height = 600
+                resized_screenshot = cv2.resize(screenshot, (screenshot_width, screenshot_height))
+
+                cv2.imshow(f"Frame {frame_index}", resized_screenshot)
+                view_window.destroy()##??
+
+            submit_button = tk.Button(view_window, text="View", command=submit, font=("Arial", 10))
+            submit_button.pack(pady=10)
+
+        except Exception as e:
+            print(f"Error while viewing screenshot: {e}")
+
+target_language = "fr"
 
 if __name__ == "__main__":
 
 
     root = tk.Tk()
     root.title("Screen Capture Control")
-    root.geometry("300x200")
+    root.geometry("300x300")
 
     #deafult to french
-    target_language = "fr"
+    #target_language = "fr"
 
     def on_start_recording():
         print("Starting recording...")
-        start_recording()
-        print("Recording stopped. You can now use console commands ('t', 'v', 'c', 'e').")
+        #start_recording()
+        threading.Thread(target=start_recording, daemon=True).start()
+
+    def toggle_language():
+        global target_language
+        if target_language == "fr":
+            target_language = "es"
+            print("Target language is now Spanish.")
+            language_label.config(text=f"Current Language: Spanish")
+        else:
+            target_language = "fr"
+            print("Target language is now French.")
+            language_label.config(text=f"Current Language: French")
+
+    def terminate_program():
+        print("Terminating...")
+        root.destroy()
+        sys.exit()
+
+    def run_gui():
+        root.mainloop()
+
+    
 
     #recording UI
     start_button = tk.Button(root, text="Start Recording", command=on_start_recording, font=("Arial", 14))
     start_button.pack(pady=20)
+
+    toggle_button = tk.Button(root, text="Toggle Language", command=toggle_language, font=("Arial", 12))
+    toggle_button.pack(pady=10)
+
+    language_label = tk.Label(root, text=f"Current Language: French", font=("Arial", 10))
+    language_label.pack(pady=5)
+
+    view_button = tk.Button(root, text="View Frame", command=view_frame, font=("Arial", 12))
+    view_button.pack(pady=10)
+    
+
+    terminate_button = tk.Button(root, text="Terminate", command=terminate_program, font=("Arial", 12))
+    terminate_button.pack(pady=10)
+
+
+
+    ##viewing, translating/ouputting
 
     # label
     instruction_label = tk.Label(root, 
@@ -325,11 +420,12 @@ if __name__ == "__main__":
     instruction_label.pack(pady=10)
 
 
-    def run_gui():
-        root.mainloop()
+    
 
 
-    run_gui()
+    #run_gui()
+    gui_thread = threading.Thread(target=run_gui, daemon=True)
+    gui_thread.start()
 
 
 ## ADD FUNTION TO VIEW CAPTURED FRAMES

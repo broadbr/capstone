@@ -326,6 +326,11 @@ if __name__ == "__main__":
             print("Target language is now French.")
             language_label.config(text=f"Current Language: French")
 
+    def terminate_program():
+        print("Terminating...")
+        root.destroy()
+        sys.exit()
+
     #recording UI
     start_button = tk.Button(root, text="Start Recording", command=on_start_recording, font=("Arial", 14))
     start_button.pack(pady=20)
@@ -335,6 +340,11 @@ if __name__ == "__main__":
 
     language_label = tk.Label(root, text=f"Current Language: French", font=("Arial", 10))
     language_label.pack(pady=5)
+
+    terminate_button = tk.Button(root, text="Terminate", command=terminate_program, font=("Arial", 12))
+    terminate_button.pack(pady=10)
+
+    ##viewing, translating/ouputting
 
     # label
     instruction_label = tk.Label(root, 
