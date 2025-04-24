@@ -3,16 +3,17 @@
 
 #####################deliverable 3 requirements####################
 
-#Implement a function to periodically send and receive text files from the library. 
-#Integrate compatibility with an offline translation model. 
-#Create a function to safely edit the target language.
-
-#Read format and display the translated text to a separate window. 
-#Refine the text detection and identification methods. 
-#Add function to save current translation and original frame.
+#Implement a function to periodically send and receive text files from the library.(user can send text munually)
+#Integrate compatibility with an offline translation model.(This caused compatibility issues with the paddleOCR model)(removed)
+#Create a function to safely edit the target language.(complete)
+#Read format and display the translated text to a separate window.(outputs to terminal)(functionally complete)
+#Refine the text detection and identification methods.(completed)
+#Add function to save current translation and original frame.(user can view original frame and translated text)(screenshots are temporaroly saved)
 
 #additional updates:
 ## 4/5 merged windows, fixed zooming by adding a flag
+## 4/11 added screenshots, and translation
+## 4/19 added character limmit detection and language selection
 
 import sys
 import numpy as np
@@ -23,6 +24,8 @@ import re
 import pynput
 from PIL import ImageGrab
 from paddleocr import PaddleOCR, draw_ocr
+import tkinter as tk
+import threading
 
 adjustments = {
     "horizontal": 0,
@@ -33,6 +36,7 @@ adjustments = {
 paddle_reader = PaddleOCR(use_angle_cls=True, lang='en')
 ocr_results = []
 processor = ""
+
 
 ##### DESIRED SAVE DIRECTORY #####
 save_dir = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data"
@@ -294,23 +298,81 @@ def clear_screenshots(directory):
         if os.path.isfile(file_path):
             os.remove(file_path)
 
+target_language = "fr"
 
 if __name__ == "__main__":
+
+
+    root = tk.Tk()
+    root.title("Screen Capture Control")
+    root.geometry("300x300")
+
+    #deafult to french
+    #target_language = "fr"
+
+    def on_start_recording():
+        print("Starting recording...")
+        start_recording()
+        print("Recording stopped. You can now use console commands ('t', 'v', 'c', 'e').")
+
+    def toggle_language():
+        global target_language
+        if target_language == "fr":
+            target_language = "es"
+            print("Target language is now Spanish.")
+            language_label.config(text=f"Current Language: Spanish")
+        else:
+            target_language = "fr"
+            print("Target language is now French.")
+            language_label.config(text=f"Current Language: French")
+
+    #recording UI
+    start_button = tk.Button(root, text="Start Recording", command=on_start_recording, font=("Arial", 14))
+    start_button.pack(pady=20)
+
+    toggle_button = tk.Button(root, text="Toggle Language", command=toggle_language, font=("Arial", 12))
+    toggle_button.pack(pady=10)
+
+    language_label = tk.Label(root, text=f"Current Language: French", font=("Arial", 10))
+    language_label.pack(pady=5)
+
+    # label
+    instruction_label = tk.Label(root, 
+    text="Click 'Start Recording' to begin.\nPress 'l' to stop recording\nUse 'w,a's,d' to pan.\n"
+         "Use 'z,x' to zoom.\nUse console for other commands ('t', 'v', 'c', 'e').", 
+    font=("Arial", 10))
+    instruction_label.pack(pady=10)
+
+
+    def run_gui():
+        root.mainloop()
+
+
+    run_gui()
 
 
 ## ADD FUNTION TO VIEW CAPTURED FRAMES
 
     while True:
-        user_input = input("Type 'r' to start recording, 'l' to stop, 't' to ranslate, or 'e' to terrminate.").lower()
+        user_input = input("Type 't' to translate, 'v' to view, 'c' to change target language, or 'e' to terrminate.").lower()
         
 
-        if user_input == "r":
+        #if user_input == "r":
             #begin recording, pass window title
-            start_recording()
+            #start_recording()
 
 
-        elif user_input == "l":
+        if user_input == "l":
             print("Capture is not running. Use 'r' to begin recording.")
+
+        elif user_input == "c":
+            #change the target language
+            if target_language == "fr":
+                target_language = "es"
+                print("Target language is now Spanish.")
+            else:
+                target_language = "fr"
+                print("Target language is now French.")
 
         elif user_input == "t":
             try:
@@ -354,6 +416,51 @@ if __name__ == "__main__":
 
             except Exception as e:
                 print(f"Error during translation: {e}")
+
+        elif user_input == "v":
+            try:
+                if not os.path.exists(formatted_json_path):
+                    print("No existing captures.")
+                    continue
+
+                formatted_results = load_data(formatted_json_path)
+
+                #list entrie count
+                num_entries = len(formatted_results)
+                print(f"There are {num_entries} captured images to traslate.")
+
+                #select frame index
+                frame_index = input("Enter the frame index you want to view: ")
+                if not frame_index.isdigit():
+                    print("Invalid index.")
+                    continue
+
+                frame_index = int(frame_index)
+
+                #check for frame
+                frame_data = next((entry for entry in formatted_results if entry["frame_index"] == frame_index), None)
+                if not frame_data:
+                    print(f"Invalid index")
+                    continue
+
+                #display the screenshot
+                screenshot_path = os.path.join(directory, f"frame_{frame_index}.png")
+                screenshot = cv2.imread(screenshot_path)
+                screenshot_width = 800
+                screenshot_height = 600
+                resized_screenshot = cv2.resize(screenshot, (screenshot_width, screenshot_height))
+
+                cv2.imshow(f"Frame {frame_index}", resized_screenshot)
+                print(f"Press 'l' to close.")
+
+                key = cv2.waitKey(0)
+                if key == ord('l'):
+                    break
+                cv2.destroyAllWindows()
+
+            except Exception as e:
+                print(f"Error while viewing screenshot: {e}")
+
 
 
         elif user_input == "e":
