@@ -353,14 +353,80 @@ def view_frame():
         except Exception as e:
             print(f"Error while viewing screenshot: {e}")
 
+def translate_frame():
+    try:
+        if not os.path.exists(formatted_json_path):
+            print("No captures found. Please run a capture first.")
+            return
+
+        #promt user
+        translate_window = tk.Toplevel()
+        translate_window.title("Translation")
+        translate_window.geometry("300x150")
+
+        tk.Label(translate_window, text="Enter the frame index to translate:", font=("Arial", 10)).pack(pady=10)
+
+        frame_index_var = tk.StringVar()
+        entry = tk.Entry(translate_window, textvariable=frame_index_var, font=("Arial", 10))
+        entry.pack(pady=10)
+
+        def submit():
+            frame_index = frame_index_var.get()
+            if not frame_index.isdigit():
+                print("Invalid index.")
+                translate_window.destroy()
+                return
+
+            frame_index = int(frame_index)
+            formatted_results = load_data(formatted_json_path)
+
+            #validate index
+            frame_data = next((entry for entry in formatted_results if entry["frame_index"] == frame_index), None)
+            if not frame_data:
+                print(f"Invalid index {frame_index}.")
+                translate_window.destroy()
+                return
+
+            #get text
+            text_to_translate = " ".join(frame_data["formated_text"])
+            if len(text_to_translate) > 500:
+                print("Translation exceeds 500 character limit.")
+                translate_window.destroy()
+                return
+
+            #translate
+            from translate import Translator
+            translator = Translator(from_lang="en", to_lang=target_language)
+            translated_text = translator.translate(text_to_translate)
+
+            #window for results
+            result_window = tk.Toplevel()
+            result_window.title(f"Translated Text - Frame {frame_index}")
+            result_window.geometry("400x300")
+
+            tk.Label(result_window, text=f"Original Text:", font=("Arial", 10, "bold")).pack(pady=5)
+            tk.Label(result_window, text=text_to_translate, font=("Arial", 10), wraplength=350).pack(pady=5)
+
+            tk.Label(result_window, text=f"Translated Text ({target_language}):", font=("Arial", 10, "bold")).pack(pady=5)
+            tk.Label(result_window, text=translated_text, font=("Arial", 10), wraplength=350).pack(pady=5)
+
+            translate_window.destroy()
+
+        submit_button = tk.Button(translate_window, text="Translate", command=submit, font=("Arial", 10))
+        submit_button.pack(pady=10)
+
+    except Exception as e:
+        print(f"Error during translation: {e}")
+        translate_window.destroy()
+
 target_language = "fr"
 
 if __name__ == "__main__":
 
 
     root = tk.Tk()
-    root.title("Screen Capture Control")
-    root.geometry("300x300")
+    root.title("Screen Capture")
+    root.geometry("300x400")
 
     #deafult to french
     #target_language = "fr"
@@ -392,7 +458,7 @@ if __name__ == "__main__":
     
 
     #recording UI
-    start_button = tk.Button(root, text="Start Recording", command=on_start_recording, font=("Arial", 14))
+    start_button = tk.Button(root, text="Start Capture", command=on_start_recording, font=("Arial", 14))
     start_button.pack(pady=20)
 
     toggle_button = tk.Button(root, text="Toggle Language", command=toggle_language, font=("Arial", 12))
@@ -401,9 +467,11 @@ if __name__ == "__main__":
     language_label = tk.Label(root, text=f"Current Language: French", font=("Arial", 10))
     language_label.pack(pady=5)
 
-    view_button = tk.Button(root, text="View Frame", command=view_frame, font=("Arial", 12))
+    view_button = tk.Button(root, text="View Frames", command=view_frame, font=("Arial", 12))
     view_button.pack(pady=10)
     
+    translate_button = tk.Button(root, text="Translate Frame", command=translate_frame, font=("Arial", 12))
+    translate_button.pack(pady=10)
 
     terminate_button = tk.Button(root, text="Terminate", command=terminate_program, font=("Arial", 12))
     terminate_button.pack(pady=10)
@@ -414,8 +482,8 @@ if __name__ == "__main__":
 
     # label
     instruction_label = tk.Label(root, 
-    text="Click 'Start Recording' to begin.\nPress 'l' to stop recording\nUse 'w,a's,d' to pan.\n"
-         "Use 'z,x' to zoom.\nUse console for other commands ('t', 'v', 'c', 'e').", 
+    text="Press 'l' to stop recording\nUse 'w,a's,d' to pan.\n"
+         "Use 'z,x' to zoom.", 
     font=("Arial", 10))
     instruction_label.pack(pady=10)
 
@@ -543,8 +611,8 @@ if __name__ == "__main__":
         elif user_input == "e":
             print("Termminating...")
             break
-        else:
-            print("Please type 'r', 's', or 'e'.")
+        #else:
+            #print("Please type 'r', 's', or 'e'.")
 
             
 
