@@ -42,9 +42,11 @@ processor = ""
 
 
 ##### DESIRED SAVE DIRECTORY #####
-save_dir = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data"
-directory = "C:\\Users\\Ryan Broadbent\\Desktop\\capstone\\capstone\\data\\photos"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+save_dir = os.path.join(script_dir, "data")
+directory = os.path.join(script_dir, "photos")
 os.makedirs(save_dir, exist_ok=True)
+os.makedirs(directory, exist_ok=True)
 json_path = os.path.join(save_dir, "ocr_results.json")
 formatted_json_path = os.path.join(save_dir, "formatted_ocr_results.json")
 
